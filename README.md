@@ -289,54 +289,43 @@ graph LR
 Every chat message — whether from the frontend or an external API call — is processed through a **compiled LangGraph state machine**. This ensures structured, multi-step reasoning instead of raw single-shot LLM calls.
 
 ```mermaid
-stateDiagram-v2
- [*] --> Planner
+flowchart TD
+    START(["User Message"]) --> PLAN
 
- state Planner {
- [*] --> GeneratePlan
- GeneratePlan: Generate Action Plan
- note right of GeneratePlan
- - Receives user query
- - Calls Groq LLM with planning prompt
- - Outputs max 5 bullet plan
- - Does NOT answer the user yet
- end note
- }
+    subgraph PLAN_BLOCK ["STAGE 1 — Planner"]
+        PLAN["Generate Action Plan"]
+        PLAN_DESC["Receives user query<br/>Calls Groq LLM with planning prompt<br/>Outputs max 5 bullet plan<br/>Does NOT answer the user yet"]
+    end
 
- Planner --> RAG_Node
+    PLAN --> CHECK
 
- state RAG_Node {
- [*] --> CheckRAG
- CheckRAG: Check RAG Enabled?
- CheckRAG --> LoadFAISS: Yes
- CheckRAG --> EmptyContext: No
- LoadFAISS: Load FAISS Index
- LoadFAISS --> SimilaritySearch
- SimilaritySearch: Top-K Similarity Search
- SimilaritySearch --> InjectContext
- InjectContext: Inject Retrieved Context
- EmptyContext: Skip (empty context)
- end
+    subgraph RAG_BLOCK ["STAGE 2 — RAG Retrieval"]
+        CHECK{"RAG Enabled?"}
+        CHECK -->|Yes| LOAD["Load FAISS Index"]
+        LOAD --> SEARCH["Top-K Similarity Search"]
+        SEARCH --> INJECT["Inject Retrieved Context"]
+        CHECK -->|No| SKIP["Skip - empty context"]
+    end
 
- RAG_Node --> Reasoner
+    INJECT --> BUILD
+    SKIP --> BUILD
 
- state Reasoner {
- [*] --> BuildPrompt
- BuildPrompt: Build Augmented System Prompt
- note right of BuildPrompt
- Combines:
- Original system prompt
- Internal plan (hidden from user)
- RAG context (if enabled)
- Conversation memory (if enabled)
- end note
- BuildPrompt --> InvokeLLM
- InvokeLLM: Invoke Groq LLM
- InvokeLLM --> ExtractResponse
- ExtractResponse: Extract & Return Response
- end
+    subgraph REASON_BLOCK ["STAGE 3 — Reasoner"]
+        BUILD["Build Augmented System Prompt"]
+        BUILD_DESC["Combines:<br/>- Original system prompt<br/>- Internal plan hidden from user<br/>- RAG context if enabled<br/>- Conversation memory if enabled"]
+        BUILD --> INVOKE["Invoke Groq LLM"]
+        INVOKE --> EXTRACT["Extract and Return Response"]
+    end
 
- Reasoner --> [*]
+    EXTRACT --> DONE(["Final Response"])
+
+    style PLAN fill:#2563eb,color:#fff
+    style CHECK fill:#7c3aed,color:#fff
+    style BUILD fill:#059669,color:#fff
+    style INVOKE fill:#F55036,color:#fff
+    style DONE fill:#0f172a,color:#fff
+    style PLAN_DESC fill:#f1f5f9,color:#334155,stroke:none
+    style BUILD_DESC fill:#f1f5f9,color:#334155,stroke:none
 ```
 
 ### Supported Models
