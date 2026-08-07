@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Create agent · Agentic AI Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" />
+    <link rel="stylesheet" href="/static/css/styles.css" />
+  </head>
+  <body>
+    <div class="sidebar-backdrop js-sidebar-backdrop"></div>
+    <div class="app-mobile-bar">
+      <button type="button" class="btn btn--ghost btn--icon js-sidebar-open" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
+      <strong class="font-display">Create agent</strong>
+      <span style="width: 44px"></span>
+    </div>
+
+    <div class="app-shell">
+      <aside class="sidebar js-sidebar">
+        <div class="sidebar__brand">
+          <span class="site-logo__mark"><i class="fa-solid fa-bolt"></i></span>
+          <div>
+            <div class="font-display" style="font-weight: 700">Agentic</div>
+            <div class="text-xs text-secondary">Console</div>
+          </div>
+          <button type="button" class="btn btn--ghost btn--icon js-sidebar-close" style="margin-left: auto" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <nav class="sidebar__nav">
+          <a href="/dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+          <a class="is-active" href="/create-agent"><i class="fa-solid fa-plus"></i> Create agent</a>
+          <a href="/chat"><i class="fa-solid fa-comments"></i> Chat</a>
+          <a href="/agents"><i class="fa-solid fa-sliders"></i> Manage agents</a>
+          <a href="/extension"><i class="fa-solid fa-puzzle-piece"></i> Download Extension</a>
+          <a href="/browse-dashboard"><i class="fa-solid fa-chart-bar"></i> Browse Dashboard</a>
+        </nav>
+        <div class="sidebar__footer">
+          <button class="btn btn--ghost btn--ripple" type="button" id="logout" style="width: 100%"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign out</button>
+        </div>
+      </aside>
+
+      <main class="app-main">
+        <div class="page-header">
+          <div>
+            <h1 class="h1">Create agent</h1>
+            <p class="text-secondary mt-0">Configure model, prompts, memory, and RAG for a new deployment.</p>
+          </div>
+          <a class="btn btn--outline" href="/dashboard">Back</a>
+        </div>
+
+        <div class="card card--pad card--glow" style="max-width: 720px">
+          <form id="form">
+            <div class="field">
+              <label for="name">Agent name</label>
+              <input class="input" id="name" required maxlength="120" placeholder="e.g. Customer Support" />
+            </div>
+            <div class="field">
+              <label for="model_name">Model</label>
+              <select class="input" id="model_name" required>
+                <option value="llama3-8b-8192">llama3-8b-8192</option>
+                <option value="llama3-70b-8192">llama3-70b-8192</option>
+                <option value="qwen-qwq-32b">qwen-qwq-32b</option>
+                <option value="deepseek-r1-distill">deepseek-r1-distill</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="system_prompt">System prompt</label>
+              <textarea class="input" id="system_prompt">You are a helpful assistant.</textarea>
+            </div>
+
+            <div class="toggle-row">
+              <div class="toggle-row__text">
+                <strong>Memory</strong>
+                <span>Persist chat history in MongoDB for contextual replies.</span>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="memory_enabled" checked />
+                <span class="toggle__ui"></span>
+              </label>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-row__text">
+                <strong>RAG</strong>
+                <span>Enable PDF uploads and FAISS retrieval for grounded answers.</span>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="rag_enabled" />
+                <span class="toggle__ui"></span>
+              </label>
+            </div>
+
+            <div class="row mt-4">
+              <button class="btn btn--primary btn--lg btn--ripple" type="submit" id="submit"><span id="submit-label">Create agent</span></button>
+            </div>
+          </form>
+
+          <div id="keybox" class="api-key-card" style="display: none">
+            <div class="api-key-card__header">
+              <div>
+                <div class="text-xs text-secondary" style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em">API key</div>
+                <div class="text-sm text-secondary mt-2 mb-0">Shown once — store it in a secret manager.</div>
+              </div>
+              <div class="row">
+                <button type="button" class="btn btn--ghost btn--sm" id="toggle-visibility" aria-pressed="false"><i class="fa-solid fa-eye"></i> Show</button>
+                <button type="button" class="btn btn--outline btn--sm btn--ripple" id="copy"><i class="fa-regular fa-copy"></i> Copy</button>
+              </div>
+            </div>
+            <div id="apikey" class="api-key-display is-hidden mono"></div>
+            <div class="row mt-3">
+              <a class="btn btn--primary btn--sm btn--ripple" href="/agents"><i class="fa-solid fa-sliders"></i> Manage agents</a>
+            </div>
+            <p class="text-secondary text-sm mt-3 mb-0">
+              <i class="fa-solid fa-terminal"></i> Call <span class="mono">POST /agent/&lt;name&gt;</span> with header <span class="mono">X-API-Key</span>.
+            </p>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="/static/js/core.js"></script>
+    <script src="/static/js/ui.js"></script>
+    <script>
+      (function () {
+        AAP.requireAuth();
+        document.getElementById("logout").addEventListener("click", function () {
+          AAP.logout();
+        });
+
+        var createdKey = "";
+        var hidden = true;
+
+        document.getElementById("copy").addEventListener("click", function () {
+          if (createdKey) AAP.copyText(createdKey);
+        });
+
+        document.getElementById("toggle-visibility").addEventListener("click", function () {
+          var el = document.getElementById("apikey");
+          var btn = document.getElementById("toggle-visibility");
+          hidden = !hidden;
+          el.classList.toggle("is-hidden", hidden);
+          btn.setAttribute("aria-pressed", hidden ? "false" : "true");
+          btn.innerHTML = hidden ? '<i class="fa-solid fa-eye"></i> Show' : '<i class="fa-solid fa-eye-slash"></i> Hide';
+        });
+
+        document.getElementById("form").addEventListener("submit", async function (e) {
+          e.preventDefault();
+          var submit = document.getElementById("submit");
+          var label = document.getElementById("submit-label");
+          submit.disabled = true;
+          label.innerHTML = '<span class="loader-inline"></span> Creating…';
+          try {
+            var body = {
+              name: document.getElementById("name").value.trim(),
+              model_name: document.getElementById("model_name").value,
+              system_prompt: document.getElementById("system_prompt").value,
+              memory_enabled: document.getElementById("memory_enabled").checked,
+              rag_enabled: document.getElementById("rag_enabled").checked,
+            };
+            var res = await AAP.api("/api/agents", { method: "POST", body: body });
+            createdKey = res.api_key || "";
+            var el = document.getElementById("apikey");
+            el.textContent = createdKey || "(Key not returned — regenerate from Manage agents)";
+            hidden = !!createdKey;
+            el.classList.toggle("is-hidden", hidden);
+            var tv = document.getElementById("toggle-visibility");
+            tv.setAttribute("aria-pressed", "false");
+            tv.innerHTML = '<i class="fa-solid fa-eye"></i> Show';
+            document.getElementById("keybox").style.display = "block";
+            AAP.toast("Agent created", "ok");
+          } catch (err) {
+            AAP.toast(err.message || "Failed", "error");
+          } finally {
+            submit.disabled = false;
+            label.textContent = "Create agent";
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

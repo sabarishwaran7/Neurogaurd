@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Manage agents · Agentic AI Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" />
+    <link rel="stylesheet" href="/static/css/styles.css" />
+  </head>
+  <body>
+    <div class="sidebar-backdrop js-sidebar-backdrop"></div>
+    <div class="app-mobile-bar">
+      <button type="button" class="btn btn--ghost btn--icon js-sidebar-open" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
+      <strong class="font-display">Agents</strong>
+      <span style="width: 44px"></span>
+    </div>
+
+    <div class="app-shell">
+      <aside class="sidebar js-sidebar">
+        <div class="sidebar__brand">
+          <span class="site-logo__mark"><i class="fa-solid fa-bolt"></i></span>
+          <div>
+            <div class="font-display" style="font-weight: 700">Agentic</div>
+            <div class="text-xs text-secondary">Console</div>
+          </div>
+          <button type="button" class="btn btn--ghost btn--icon js-sidebar-close" style="margin-left: auto" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <nav class="sidebar__nav">
+          <a href="/dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+          <a href="/create-agent"><i class="fa-solid fa-plus"></i> Create agent</a>
+          <a href="/chat"><i class="fa-solid fa-comments"></i> Chat</a>
+          <a class="is-active" href="/agents"><i class="fa-solid fa-sliders"></i> Manage agents</a>
+          <a href="/extension"><i class="fa-solid fa-puzzle-piece"></i> Download Extension</a>
+          <a href="/browse-dashboard"><i class="fa-solid fa-chart-bar"></i> Browse Dashboard</a>
+        </nav>
+        <div class="sidebar__footer">
+          <button class="btn btn--ghost btn--ripple" type="button" id="logout" style="width: 100%"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign out</button>
+        </div>
+      </aside>
+
+      <main class="app-main">
+        <div class="page-header">
+          <div>
+            <h1 class="h1">Agent management</h1>
+            <p class="text-secondary mt-0">Edit agents, rotate API keys, and upload RAG documents.</p>
+          </div>
+          <a class="btn btn--primary btn--ripple" href="/create-agent"><i class="fa-solid fa-plus"></i> New agent</a>
+        </div>
+
+        <div class="card card--pad mb-0" style="margin-bottom: 20px">
+          <h2 class="h2 mt-0"><i class="fa-solid fa-cloud-arrow-up text-secondary"></i> PDF upload (RAG)</h2>
+          <p class="text-secondary text-sm mt-2">Select an agent with RAG enabled, then upload a PDF (max 20MB).</p>
+          <div class="row" style="margin-top: 16px; align-items: flex-end; flex-wrap: wrap">
+            <div class="field" style="margin: 0; flex: 1; min-width: 200px">
+              <label for="rag_agent">Agent</label>
+              <select class="input" id="rag_agent"></select>
+            </div>
+            <div class="field" style="margin: 0; flex: 1; min-width: 200px">
+              <label for="pdf">PDF</label>
+              <input class="input" id="pdf" type="file" accept="application/pdf" />
+            </div>
+            <button type="button" class="btn btn--primary btn--ripple" id="upload"><i class="fa-solid fa-upload"></i> Upload</button>
+          </div>
+        </div>
+
+        <div class="card card--pad">
+          <h2 class="h2 mt-0">All agents</h2>
+          <div class="table-wrap mt-3">
+            <table class="data-table" id="tbl">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Model</th>
+                  <th>Flags</th>
+                  <th>API prefix</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div class="modal-overlay" id="backdrop" aria-hidden="true">
+      <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="edit-title">
+        <div class="row row--between" style="margin-bottom: 16px">
+          <h2 class="h2 mt-0" id="edit-title">Edit agent</h2>
+          <button type="button" class="btn btn--ghost btn--icon" id="close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="editform">
+          <input type="hidden" id="eid" />
+          <div class="field">
+            <label for="ename">Name</label>
+            <input class="input" id="ename" required />
+          </div>
+          <div class="field">
+            <label for="emodel">Model</label>
+            <select class="input" id="emodel">
+              <option value="llama3-8b-8192">llama3-8b-8192</option>
+              <option value="llama3-70b-8192">llama3-70b-8192</option>
+              <option value="qwen-qwq-32b">qwen-qwq-32b</option>
+              <option value="deepseek-r1-distill">deepseek-r1-distill</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="eprompt">System prompt</label>
+            <textarea class="input" id="eprompt"></textarea>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-row__text"><strong>Memory</strong><span>Persist conversations for this agent.</span></div>
+            <label class="toggle"><input type="checkbox" id="emem" /><span class="toggle__ui"></span></label>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-row__text"><strong>RAG</strong><span>Allow PDF ingestion and retrieval.</span></div>
+            <label class="toggle"><input type="checkbox" id="erag" /><span class="toggle__ui"></span></label>
+          </div>
+          <button class="btn btn--primary btn--ripple mt-3" type="submit" id="esave">Save changes</button>
+        </form>
+      </div>
+    </div>
+
+    <script src="/static/js/core.js"></script>
+    <script src="/static/js/ui.js"></script>
+    <script>
+      (function () {
+        AAP.requireAuth();
+        document.getElementById("logout").addEventListener("click", function () {
+          AAP.logout();
+        });
+
+        var agents = [];
+        var backdrop = document.getElementById("backdrop");
+
+        function esc(s) {
+          return String(s || "").replace(/</g, "&lt;");
+        }
+
+        function openEdit(a) {
+          document.getElementById("eid").value = a.id;
+          document.getElementById("ename").value = a.name;
+          document.getElementById("emodel").value = a.model_name;
+          document.getElementById("eprompt").value = a.system_prompt;
+          document.getElementById("emem").checked = !!a.memory_enabled;
+          document.getElementById("erag").checked = !!a.rag_enabled;
+          backdrop.classList.add("is-open");
+          backdrop.setAttribute("aria-hidden", "false");
+        }
+
+        function closeEdit() {
+          backdrop.classList.remove("is-open");
+          backdrop.setAttribute("aria-hidden", "true");
+        }
+        document.getElementById("close").addEventListener("click", closeEdit);
+        backdrop.addEventListener("click", function (e) {
+          if (e.target === backdrop) closeEdit();
+        });
+
+        document.getElementById("editform").addEventListener("submit", async function (e) {
+          e.preventDefault();
+          var id = document.getElementById("eid").value;
+          var btn = document.getElementById("esave");
+          btn.disabled = true;
+          try {
+            await AAP.api("/api/agents/" + encodeURIComponent(id), {
+              method: "PATCH",
+              body: {
+                name: document.getElementById("ename").value.trim(),
+                model_name: document.getElementById("emodel").value,
+                system_prompt: document.getElementById("eprompt").value,
+                memory_enabled: document.getElementById("emem").checked,
+                rag_enabled: document.getElementById("erag").checked,
+              },
+            });
+            AAP.toast("Saved", "ok");
+            closeEdit();
+            await refresh();
+          } catch (err) {
+            AAP.toast(err.message || "Save failed", "error");
+          } finally {
+            btn.disabled = false;
+          }
+        });
+
+        function fillRagSelect() {
+          var sel = document.getElementById("rag_agent");
+          sel.innerHTML = "";
+          var rag = agents.filter(function (a) {
+            return a.rag_enabled;
+          });
+          if (!rag.length) {
+            var o = document.createElement("option");
+            o.value = "";
+            o.textContent = "No RAG-enabled agents";
+            sel.appendChild(o);
+            return;
+          }
+          rag.forEach(function (a) {
+            var opt = document.createElement("option");
+            opt.value = a.id;
+            opt.textContent = a.name;
+            sel.appendChild(opt);
+          });
+        }
+
+        async function refresh() {
+          agents = await AAP.api("/api/agents");
+          fillRagSelect();
+          var tbody = document.querySelector("#tbl tbody");
+          tbody.innerHTML = "";
+          if (!agents.length) {
+            tbody.innerHTML =
+              '<tr><td colspan="5"><div class="empty-state" style="border: none; padding: 32px 16px">' +
+              '<div class="empty-state__icon"><i class="fa-solid fa-robot"></i></div>' +
+              '<h3 class="h3">No agents yet</h3>' +
+              '<p class="text-secondary text-sm">Create an agent to see it listed here.</p>' +
+              '<a class="btn btn--primary btn--ripple mt-3" href="/create-agent">Create agent</a>' +
+              "</div></td></tr>";
+            return;
+          }
+          agents.forEach(function (a) {
+            var tr = document.createElement("tr");
+            tr.innerHTML =
+              "<td><strong>" +
+              esc(a.name) +
+              "</strong></td>" +
+              '<td class="mono text-sm">' +
+              esc(a.model_name) +
+              "</td>" +
+              "<td>" +
+              (a.memory_enabled ? '<span class="badge badge--success">Memory</span>' : '<span class="badge badge--muted">Mem off</span>') +
+              " " +
+              (a.rag_enabled ? '<span class="badge badge--success">RAG</span>' : '<span class="badge badge--muted">RAG off</span>') +
+              "</td>" +
+              '<td class="mono text-sm">' +
+              esc(a.api_key_prefix || "—") +
+              "</td>" +
+              "<td><div class=\"row\" style=\"gap:6px;flex-wrap:wrap\">" +
+              '<button type="button" class="btn btn--outline btn--sm btn--ripple" data-copy="' +
+              esc(a.api_key_prefix || "") +
+              '"><i class="fa-regular fa-copy"></i></button>' +
+              '<button type="button" class="btn btn--outline btn--sm" data-edit="' +
+              esc(a.id) +
+              '"><i class="fa-solid fa-pen"></i></button>' +
+              '<button type="button" class="btn btn--outline btn--sm" data-regen="' +
+              esc(a.id) +
+              '"><i class="fa-solid fa-rotate"></i></button>' +
+              '<button type="button" class="btn btn--danger btn--sm" data-del="' +
+              esc(a.id) +
+              '"><i class="fa-solid fa-trash"></i></button>' +
+              "</div></td>";
+            tbody.appendChild(tr);
+          });
+
+          tbody.querySelectorAll("button[data-edit]").forEach(function (b) {
+            b.addEventListener("click", function () {
+              var id = b.getAttribute("data-edit");
+              var ag = agents.find(function (x) {
+                return x.id === id;
+              });
+              if (ag) openEdit(ag);
+            });
+          });
+          tbody.querySelectorAll("button[data-del]").forEach(function (b) {
+            b.addEventListener("click", async function () {
+              var id = b.getAttribute("data-del");
+              if (!confirm("Delete this agent and all associated data?")) return;
+              try {
+                await AAP.api("/api/agents/" + encodeURIComponent(id), { method: "DELETE" });
+                AAP.toast("Deleted", "ok");
+                await refresh();
+              } catch (e) {
+                AAP.toast(e.message || "Delete failed", "error");
+              }
+            });
+          });
+          tbody.querySelectorAll("button[data-regen]").forEach(function (b) {
+            b.addEventListener("click", async function () {
+              var id = b.getAttribute("data-regen");
+              if (!confirm("Regenerate API key? The previous key stops working immediately.")) return;
+              try {
+                var res = await AAP.api("/api/agents/" + encodeURIComponent(id) + "/regenerate-key", { method: "POST", body: {} });
+                if (res.api_key) {
+                  await AAP.copyText(res.api_key);
+                  alert("New API key copied to clipboard:\n\n" + res.api_key);
+                }
+                await refresh();
+              } catch (e) {
+                AAP.toast(e.message || "Failed", "error");
+              }
+            });
+          });
+          tbody.querySelectorAll("button[data-copy]").forEach(function (b) {
+            b.addEventListener("click", function () {
+              var t = b.getAttribute("data-copy");
+              if (t) AAP.copyText(t);
+            });
+          });
+        }
+
+        document.getElementById("upload").addEventListener("click", async function () {
+          var id = document.getElementById("rag_agent").value;
+          var f = document.getElementById("pdf").files[0];
+          if (!id) return AAP.toast("Select an agent", "error");
+          if (!f) return AAP.toast("Choose a PDF", "error");
+          var fd = new FormData();
+          fd.append("file", f, f.name);
+          try {
+            await AAP.api("/api/agents/" + encodeURIComponent(id) + "/rag/upload", { method: "POST", body: fd, rawBody: true });
+            AAP.toast("Indexed successfully", "ok");
+            document.getElementById("pdf").value = "";
+          } catch (e) {
+            AAP.toast(e.message || "Upload failed", "error");
+          }
+        });
+
+        refresh().catch(function (e) {
+          AAP.toast(e.message || "Load failed", "error");
+        });
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Chat · Agentic AI Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" />
+    <link rel="stylesheet" href="/static/css/styles.css" />
+  </head>
+  <body>
+    <div class="sidebar-backdrop js-sidebar-backdrop"></div>
+    <div class="app-mobile-bar">
+      <button type="button" class="btn btn--ghost btn--icon js-sidebar-open" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
+      <strong class="font-display">Chat</strong>
+      <span style="width: 44px"></span>
+    </div>
+
+    <div class="app-shell">
+      <aside class="sidebar js-sidebar">
+        <div class="sidebar__brand">
+          <span class="site-logo__mark"><i class="fa-solid fa-bolt"></i></span>
+          <div>
+            <div class="font-display" style="font-weight: 700">Agentic</div>
+            <div class="text-xs text-secondary">Console</div>
+          </div>
+          <button type="button" class="btn btn--ghost btn--icon js-sidebar-close" style="margin-left: auto" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <nav class="sidebar__nav">
+          <a href="/dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+          <a href="/create-agent"><i class="fa-solid fa-plus"></i> Create agent</a>
+          <a class="is-active" href="/chat"><i class="fa-solid fa-comments"></i> Chat</a>
+          <a href="/agents"><i class="fa-solid fa-sliders"></i> Manage agents</a>
+          <a href="/extension"><i class="fa-solid fa-puzzle-piece"></i> Download Extension</a>
+          <a href="/browse-dashboard"><i class="fa-solid fa-chart-bar"></i> Browse Dashboard</a>
+        </nav>
+        <div class="sidebar__footer">
+          <button class="btn btn--ghost btn--ripple" type="button" id="logout" style="width: 100%"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign out</button>
+        </div>
+      </aside>
+
+      <main class="app-main">
+        <div class="page-header">
+          <div>
+            <h1 class="h1">Chat</h1>
+            <p class="text-secondary mt-0">Session chat with JWT — messages respect agent memory settings.</p>
+          </div>
+        </div>
+
+        <div class="card card--pad" style="max-width: 920px; margin: 0 auto">
+          <div class="chat-toolbar">
+            <div class="field" style="margin: 0; flex: 1; min-width: 220px">
+              <label for="agent">Agent</label>
+              <select class="input" id="agent"></select>
+            </div>
+            <p class="text-sm text-secondary mb-0" id="meta" style="padding-top: 22px"></p>
+          </div>
+
+          <div class="chat-layout">
+            <div id="log" class="chat-log" role="log" aria-live="polite"></div>
+            <form id="form" class="chat-compose">
+              <textarea class="input" id="msg" rows="2" placeholder="Message your agent…"></textarea>
+              <button class="btn btn--primary btn--ripple" type="submit" id="send" style="height: 52px; min-width: 52px" aria-label="Send">
+                <i class="fa-solid fa-paper-plane"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="/static/js/core.js"></script>
+    <script src="/static/js/ui.js"></script>
+    <script>
+      (function () {
+        AAP.requireAuth();
+        document.getElementById("logout").addEventListener("click", function () {
+          AAP.logout();
+        });
+
+        function esc(s) {
+          return String(s || "").replace(/</g, "&lt;");
+        }
+
+        function append(role, html) {
+          var log = document.getElementById("log");
+          var wrap = document.createElement("div");
+          wrap.className = "chat-msg chat-msg--" + (role === "user" ? "user" : "assistant");
+          wrap.innerHTML =
+            '<div style="max-width:100%">' +
+            '<div class="chat-meta">' +
+            (role === "user" ? "You" : "Assistant") +
+            "</div>" +
+            '<div class="chat-bubble">' +
+            html +
+            "</div></div>";
+          log.appendChild(wrap);
+          log.scrollTop = log.scrollHeight;
+          return wrap;
+        }
+
+        function showTyping() {
+          var el = document.createElement("div");
+          el.className = "chat-msg chat-msg--assistant";
+          el.id = "typing-row";
+          el.innerHTML =
+            '<div><div class="chat-meta">Assistant</div><div class="chat-bubble"><div class="typing" aria-label="Typing"><span></span><span></span><span></span></div></div></div>';
+          document.getElementById("log").appendChild(el);
+          document.getElementById("log").scrollTop = document.getElementById("log").scrollHeight;
+        }
+
+        function hideTyping() {
+          var t = document.getElementById("typing-row");
+          if (t) t.remove();
+        }
+
+        async function boot() {
+          var agents = await AAP.api("/api/agents");
+          var sel = document.getElementById("agent");
+          sel.innerHTML = "";
+          agents.forEach(function (a) {
+            var opt = document.createElement("option");
+            opt.value = a.id;
+            opt.textContent = a.name + " · " + a.model_name;
+            sel.appendChild(opt);
+          });
+          var params = new URLSearchParams(location.search);
+          var wanted = params.get("agent");
+          if (wanted) sel.value = wanted;
+
+          function updateMeta() {
+            var id = sel.value;
+            var a = agents.find(function (x) {
+              return x.id === id;
+            });
+            if (!a) {
+              document.getElementById("meta").textContent = "";
+              return;
+            }
+            document.getElementById("meta").textContent =
+              (a.memory_enabled ? "Memory on" : "Memory off") + " · " + (a.rag_enabled ? "RAG on" : "RAG off");
+          }
+          sel.addEventListener("change", updateMeta);
+          updateMeta();
+        }
+
+        document.getElementById("form").addEventListener("submit", async function (e) {
+          e.preventDefault();
+          var agentId = document.getElementById("agent").value;
+          var msg = document.getElementById("msg").value.trim();
+          if (!agentId || !msg) return;
+          var send = document.getElementById("send");
+          send.disabled = true;
+          append("user", esc(msg).replace(/\n/g, "<br/>"));
+          document.getElementById("msg").value = "";
+          showTyping();
+          try {
+            var res = await AAP.api("/api/chat", {
+              method: "POST",
+              body: { agent_id: agentId, message: msg },
+            });
+            hideTyping();
+            append("assistant", esc(res.reply || "").replace(/\n/g, "<br/>"));
+          } catch (err) {
+            hideTyping();
+            append("assistant", '<span style="color:#dc2626">' + esc(err.message || "Error") + "</span>");
+            AAP.toast(err.message || "Chat failed", "error");
+          } finally {
+            send.disabled = false;
+          }
+        });
+
+        boot().catch(function (e) {
+          AAP.toast(e.message || "Failed to load", "error");
+        });
+      })();
+    </script>
+  </body>
+</html>

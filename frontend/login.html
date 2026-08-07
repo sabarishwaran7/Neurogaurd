@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sign in · Agentic AI Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" />
+    <link rel="stylesheet" href="/static/css/styles.css" />
+  </head>
+  <body class="auth-page">
+    <header class="site-header js-site-header">
+      <div class="site-header__inner">
+        <a class="site-logo" href="/">
+          <span class="site-logo__mark"><i class="fa-solid fa-bolt"></i></span>
+          <span>Agentic</span>
+        </a>
+        <div class="site-header__actions">
+          <a class="btn btn--ghost btn--sm" href="/">Home</a>
+          <a class="btn btn--primary btn--sm btn--ripple" href="/register">Create account</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="container" style="flex: 1">
+      <div class="auth-card">
+        <div class="row" style="gap: 14px; margin-bottom: 8px">
+          <span class="site-logo__mark" style="width: 48px; height: 48px; font-size: 1.1rem"><i class="fa-solid fa-right-to-bracket"></i></span>
+          <div>
+            <h1 class="h1" style="font-size: 1.5rem">Welcome back</h1>
+            <p class="text-secondary text-sm mt-0">Sign in to manage agents, keys, and chat.</p>
+          </div>
+        </div>
+
+        <form id="form" class="mt-4">
+          <div class="field">
+            <label for="email">Work email</label>
+            <input class="input" id="email" name="email" type="email" autocomplete="username" required placeholder="you@company.com" />
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <input class="input" id="password" name="password" type="password" autocomplete="current-password" required />
+          </div>
+          <button class="btn btn--primary btn--lg btn--ripple" style="width: 100%" type="submit" id="submit">
+            <span id="submit-label">Sign in</span>
+          </button>
+          <p class="text-secondary text-sm mt-3 mb-0" style="text-align: center">
+            New here? <a href="/register">Create an account</a>
+          </p>
+        </form>
+      </div>
+    </main>
+
+    <footer class="site-footer" style="margin-top: 0; padding: 32px 0">
+      <div class="container footer-bottom" style="margin-top: 0; padding-top: 0; border-top: none">
+        <span class="text-sm text-secondary">© <span id="y"></span> Agentic AI Platform</span>
+        <a class="text-sm" href="/"><i class="fa-solid fa-arrow-left"></i> Back to home</a>
+      </div>
+    </footer>
+
+    <script src="/static/js/core.js"></script>
+    <script src="/static/js/ui.js"></script>
+    <script>
+      document.getElementById("y").textContent = new Date().getFullYear();
+      (function () {
+        if (window.AAP.getToken()) location.href = "/dashboard";
+        var form = document.getElementById("form");
+        var submit = document.getElementById("submit");
+        var label = document.getElementById("submit-label");
+        form.addEventListener("submit", async function (e) {
+          e.preventDefault();
+          submit.disabled = true;
+          label.innerHTML = '<span class="loader-inline"></span> Signing in…';
+          try {
+            var body = {
+              email: document.getElementById("email").value.trim(),
+              password: document.getElementById("password").value,
+            };
+            var res = await AAP.api("/api/auth/login", { method: "POST", body: body, auth: false });
+            AAP.setToken(res.access_token);
+            AAP.toast("Signed in successfully", "ok");
+            location.href = "/dashboard";
+          } catch (err) {
+            AAP.toast(err.message || "Login failed", "error");
+          } finally {
+            submit.disabled = false;
+            label.textContent = "Sign in";
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

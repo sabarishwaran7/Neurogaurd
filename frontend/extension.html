@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NeuroGuard Extension · Agentic AI Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" />
+    <link rel="stylesheet" href="/static/css/styles.css" />
+    <style>
+      .ext-hero {
+        text-align: center;
+        padding: 48px 32px;
+        background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(139,92,246,0.06));
+        border: 1px solid rgba(99,102,241,0.12);
+        border-radius: 20px;
+        margin-bottom: 28px;
+      }
+      .ext-hero__icon {
+        width: 80px; height: 80px;
+        margin: 0 auto 20px;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        border-radius: 20px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 36px;
+        box-shadow: 0 8px 30px rgba(99,102,241,0.3);
+      }
+      .ext-hero h2 {
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.6rem; font-weight: 700;
+        margin-bottom: 8px;
+      }
+      .ext-hero p {
+        color: var(--text-secondary, #64748b);
+        max-width: 50ch; margin: 0 auto 24px; font-size: 0.95rem;
+      }
+      .ext-download-btn {
+        display: inline-flex; align-items: center; gap: 10px;
+        padding: 14px 32px; border-radius: 14px;
+        font-size: 1rem; font-weight: 700;
+        background: linear-gradient(135deg, #6366f1, #7c3aed);
+        color: #fff; border: none; cursor: pointer;
+        box-shadow: 0 6px 20px rgba(99,102,241,0.35);
+        transition: all 0.25s ease; text-decoration: none;
+      }
+      .ext-download-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(99,102,241,0.45);
+      }
+      .ext-features { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 28px; }
+      .ext-feature {
+        padding: 24px;
+        background: var(--card-bg, #fff);
+        border: 1px solid var(--border, #e2e8f0);
+        border-radius: 16px;
+        box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.06));
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      .ext-feature:hover { transform: translateY(-3px); box-shadow: var(--shadow-md, 0 4px 12px rgba(0,0,0,0.08)); }
+      .ext-feature__icon {
+        width: 44px; height: 44px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 20px; margin-bottom: 14px;
+      }
+      .ext-feature__icon--ai { background: rgba(99,102,241,0.1); color: #6366f1; }
+      .ext-feature__icon--shield { background: rgba(239,68,68,0.1); color: #ef4444; }
+      .ext-feature__icon--search { background: rgba(14,165,233,0.1); color: #0ea5e9; }
+      .ext-feature__icon--flow { background: rgba(16,185,129,0.1); color: #10b981; }
+      .ext-feature__icon--explain { background: rgba(245,158,11,0.1); color: #f59e0b; }
+      .ext-feature__icon--popup { background: rgba(168,85,247,0.1); color: #a855f7; }
+      .ext-feature h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 6px; }
+      .ext-feature p { font-size: 0.82rem; color: var(--text-secondary, #64748b); margin: 0; line-height: 1.55; }
+
+      .ext-steps { counter-reset: step; margin-bottom: 28px; }
+      .ext-step {
+        display: flex; gap: 16px; padding: 18px 20px;
+        background: var(--card-bg, #fff);
+        border: 1px solid var(--border, #e2e8f0);
+        border-radius: 14px; margin-bottom: 10px;
+        box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.06));
+        align-items: center;
+      }
+      .ext-step__num {
+        counter-increment: step;
+        width: 36px; height: 36px; min-width: 36px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #6366f1, #7c3aed);
+        color: #fff; font-weight: 800; font-size: 0.85rem;
+        display: flex; align-items: center; justify-content: center;
+      }
+      .ext-step__num::before { content: counter(step); }
+      .ext-step__text strong { display: block; font-size: 0.9rem; margin-bottom: 2px; }
+      .ext-step__text span { font-size: 0.8rem; color: var(--text-secondary, #64748b); }
+      .ext-step__text code {
+        background: rgba(99,102,241,0.08);
+        padding: 2px 8px; border-radius: 6px;
+        font-size: 0.78rem; font-family: 'Courier New', monospace;
+      }
+
+      .ext-pipeline {
+        padding: 24px;
+        background: var(--card-bg, #fff);
+        border: 1px solid var(--border, #e2e8f0);
+        border-radius: 16px;
+        box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.06));
+      }
+      .pipeline-flow {
+        display: flex; align-items: center; justify-content: center;
+        flex-wrap: wrap; gap: 8px; margin-top: 16px;
+      }
+      .pipeline-node {
+        padding: 10px 16px; border-radius: 10px;
+        font-size: 0.78rem; font-weight: 600;
+        background: rgba(99,102,241,0.08); color: #6366f1;
+        border: 1px solid rgba(99,102,241,0.15);
+      }
+      .pipeline-arrow { color: var(--text-secondary, #64748b); font-size: 1rem; }
+    </style>
+  </head>
+  <body>
+    <div class="sidebar-backdrop js-sidebar-backdrop"></div>
+    <div class="app-mobile-bar">
+      <button type="button" class="btn btn--ghost btn--icon js-sidebar-open" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
+      <strong class="font-display">Extension</strong>
+      <span style="width: 44px"></span>
+    </div>
+
+    <div class="app-shell">
+      <aside class="sidebar js-sidebar">
+        <div class="sidebar__brand">
+          <span class="site-logo__mark"><i class="fa-solid fa-bolt"></i></span>
+          <div>
+            <div class="font-display" style="font-weight: 700">Agentic</div>
+            <div class="text-xs text-secondary">Console</div>
+          </div>
+          <button type="button" class="btn btn--ghost btn--icon js-sidebar-close" style="margin-left: auto" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <nav class="sidebar__nav">
+          <a href="/dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+          <a href="/create-agent"><i class="fa-solid fa-plus"></i> Create agent</a>
+          <a href="/chat"><i class="fa-solid fa-comments"></i> Chat</a>
+          <a href="/agents"><i class="fa-solid fa-sliders"></i> Manage agents</a>
+          <a class="is-active" href="/extension"><i class="fa-solid fa-puzzle-piece"></i> Download Extension</a>
+          <a href="/browse-dashboard"><i class="fa-solid fa-chart-bar"></i> Browse Dashboard</a>
+        </nav>
+        <div class="sidebar__footer">
+          <button class="btn btn--ghost btn--ripple" type="button" id="logout" style="width: 100%"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign out</button>
+        </div>
+      </aside>
+
+      <main class="app-main">
+        <div class="page-header">
+          <div>
+            <h1 class="h1">NeuroGuard Extension</h1>
+            <p class="text-secondary mt-0">AI-powered browser protection with real-time threat detection.</p>
+          </div>
+        </div>
+
+        <!-- Hero Download Section -->
+        <div class="ext-hero">
+          <div class="ext-hero__icon">🛡️</div>
+          <h2>NeuroGuard Chrome Extension</h2>
+          <p>Protect your browsing with AI-powered URL classification, reputation analysis, and automatic threat blocking.</p>
+          <a class="ext-download-btn" href="/api/extension/download" download="neuroguard-extension.zip" id="downloadBtn">
+            <i class="fa-solid fa-download"></i> Download Extension v1.0.0
+          </a>
+          <p style="margin-top: 16px; font-size: 0.78rem; color: var(--text-secondary, #64748b);">
+            Chrome · Manifest V3 · Requires Developer Mode
+          </p>
+        </div>
+
+        <!-- Features Grid -->
+        <div class="ext-features">
+          <div class="ext-feature">
+            <div class="ext-feature__icon ext-feature__icon--ai"><i class="fa-solid fa-robot"></i></div>
+            <h3>Groq AI Analysis</h3>
+            <p>Every URL is classified as Safe, Suspicious, or Harmful using Groq's llama3-8b-8192 model.</p>
+          </div>
+          <div class="ext-feature">
+            <div class="ext-feature__icon ext-feature__icon--search"><i class="fa-solid fa-magnifying-glass"></i></div>
+            <h3>SerpApi Reputation</h3>
+            <p>Google is searched for scam, phishing, and malware reports related to each domain.</p>
+          </div>
+          <div class="ext-feature">
+            <div class="ext-feature__icon ext-feature__icon--shield"><i class="fa-solid fa-shield-halved"></i></div>
+            <h3>Auto-Blocking</h3>
+            <p>Harmful websites are automatically blocked and redirected to a safety page.</p>
+          </div>
+          <div class="ext-feature">
+            <div class="ext-feature__icon ext-feature__icon--explain"><i class="fa-solid fa-lightbulb"></i></div>
+            <h3>AI Explanations</h3>
+            <p>Blocked sites show an AI-generated reason explaining why the URL is dangerous.</p>
+          </div>
+          <div class="ext-feature">
+            <div class="ext-feature__icon ext-feature__icon--flow"><i class="fa-solid fa-diagram-project"></i></div>
+            <h3>Workflow Engine</h3>
+            <p>n8n-inspired node-based pipeline executes URL analysis in modular, logged steps.</p>
+          </div>
+          <div class="ext-feature">
+            <div class="ext-feature__icon ext-feature__icon--popup"><i class="fa-solid fa-window-restore"></i></div>
+            <h3>Live Popup UI</h3>
+            <p>Click the extension icon to see real-time Gemini + SerpApi results for the current tab.</p>
+          </div>
+        </div>
+
+        <!-- Workflow Pipeline -->
+        <div class="ext-pipeline">
+          <h2 class="h2 mt-0"><i class="fa-solid fa-diagram-project text-secondary"></i> AI Threat Detection Pipeline</h2>
+          <p class="text-secondary text-sm mt-2">6-node workflow engine executes for every URL you visit.</p>
+          <div class="pipeline-flow">
+            <div class="pipeline-node">🔗 URL Detection</div>
+            <span class="pipeline-arrow">→</span>
+            <div class="pipeline-node">🤖 Groq AI</div>
+            <span class="pipeline-arrow">→</span>
+            <div class="pipeline-node">🔎 SerpApi</div>
+            <span class="pipeline-arrow">→</span>
+            <div class="pipeline-node">⚖️ Decision</div>
+            <span class="pipeline-arrow">→</span>
+            <div class="pipeline-node">💬 AI Explain</div>
+            <span class="pipeline-arrow">→</span>
+            <div class="pipeline-node">🛡️ Block</div>
+          </div>
+        </div>
+
+        <!-- Installation Steps -->
+        <div class="card card--pad mt-4">
+          <h2 class="h2 mt-0"><i class="fa-solid fa-wrench text-secondary"></i> Installation Guide</h2>
+          <div class="ext-steps mt-3">
+            <div class="ext-step">
+              <div class="ext-step__num"></div>
+              <div class="ext-step__text">
+                <strong>Download the extension</strong>
+                <span>Click the download button above to get the ZIP file.</span>
+              </div>
+            </div>
+            <div class="ext-step">
+              <div class="ext-step__num"></div>
+              <div class="ext-step__text">
+                <strong>Extract the ZIP</strong>
+                <span>Unzip the file to any folder on your computer.</span>
+              </div>
+            </div>
+            <div class="ext-step">
+              <div class="ext-step__num"></div>
+              <div class="ext-step__text">
+                <strong>Open Chrome Extensions</strong>
+                <span>Navigate to <code>chrome://extensions/</code> in your browser.</span>
+              </div>
+            </div>
+            <div class="ext-step">
+              <div class="ext-step__num"></div>
+              <div class="ext-step__text">
+                <strong>Enable Developer Mode</strong>
+                <span>Toggle the switch in the top-right corner of the extensions page.</span>
+              </div>
+            </div>
+            <div class="ext-step">
+              <div class="ext-step__num"></div>
+              <div class="ext-step__text">
+                <strong>Load Unpacked</strong>
+                <span>Click "Load unpacked" and select the extracted <code>neuroguard-extension</code> folder.</span>
+              </div>
+            </div>
+            <div class="ext-step">
+              <div class="ext-step__num"></div>
+              <div class="ext-step__text">
+                <strong>Start browsing safely</strong>
+                <span>The extension is now active! Click the 🛡️ icon to see live analysis.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="/static/js/core.js"></script>
+    <script src="/static/js/ui.js"></script>
+    <script>
+      (function () {
+        AAP.requireAuth();
+        document.getElementById("logout").addEventListener("click", function () {
+          AAP.logout();
+        });
+      })();
+    </script>
+  </body>
+</html>

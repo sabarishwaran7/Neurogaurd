@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard · Agentic AI Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" />
+    <link rel="stylesheet" href="/static/css/styles.css" />
+  </head>
+  <body>
+    <div class="sidebar-backdrop js-sidebar-backdrop" aria-hidden="true"></div>
+
+    <div class="app-mobile-bar">
+      <button type="button" class="btn btn--ghost btn--icon js-sidebar-open" aria-label="Open navigation">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <strong class="font-display">Dashboard</strong>
+      <span style="width: 44px"></span>
+    </div>
+
+    <div class="app-shell">
+      <aside class="sidebar js-sidebar" aria-label="Sidebar">
+        <div class="sidebar__brand">
+          <span class="site-logo__mark"><i class="fa-solid fa-bolt"></i></span>
+          <div>
+            <div class="font-display" style="font-weight: 700">Agentic</div>
+            <div class="text-xs text-secondary">Console</div>
+          </div>
+          <button type="button" class="btn btn--ghost btn--icon js-sidebar-close" style="margin-left: auto" aria-label="Close menu">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <nav class="sidebar__nav">
+          <a class="is-active" href="/dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+          <a href="/create-agent"><i class="fa-solid fa-plus"></i> Create agent</a>
+          <a href="/chat"><i class="fa-solid fa-comments"></i> Chat</a>
+          <a href="/agents"><i class="fa-solid fa-sliders"></i> Manage agents</a>
+          <a href="/extension"><i class="fa-solid fa-puzzle-piece"></i> Download Extension</a>
+          <a href="/browse-dashboard"><i class="fa-solid fa-chart-bar"></i> Browse Dashboard</a>
+        </nav>
+        <div class="sidebar__footer">
+          <div class="card card--pad" style="padding: 12px; box-shadow: none">
+            <div class="text-xs text-secondary">Signed in as</div>
+            <div class="mono text-sm" id="who" style="margin-top: 4px; word-break: break-all">…</div>
+          </div>
+          <button class="btn btn--ghost btn--ripple" type="button" id="logout" style="width: 100%; margin-top: 10px">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign out
+          </button>
+        </div>
+      </aside>
+
+      <main class="app-main">
+        <div class="page-header">
+          <div>
+            <h1 class="h1">Dashboard</h1>
+            <p class="text-secondary mt-0">Overview of agents, usage, and recent activity.</p>
+          </div>
+          <div class="page-header__search">
+            <div class="site-search" style="max-width: none">
+              <i class="fa-solid fa-magnifying-glass text-secondary"></i>
+              <label class="sr-only" for="dash-search">Filter agents</label>
+              <input type="search" id="dash-search" placeholder="Search agents by name or model…" />
+            </div>
+          </div>
+          <a class="btn btn--primary btn--ripple" href="/create-agent"><i class="fa-solid fa-plus"></i> New agent</a>
+        </div>
+
+        <div class="grid-3" style="margin-bottom: 20px">
+          <div class="card card--pad">
+            <div class="text-xs text-secondary" style="font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em">Total agents</div>
+            <div id="stat_agents" class="font-display" style="font-size: 2rem; font-weight: 700; margin-top: 8px">—</div>
+          </div>
+          <div class="card card--pad">
+            <div class="text-xs text-secondary" style="font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em">API calls today</div>
+            <div id="stat_usage" class="font-display" style="font-size: 2rem; font-weight: 700; margin-top: 8px">—</div>
+          </div>
+          <div class="card card--pad">
+            <div class="text-xs text-secondary" style="font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em">Platform</div>
+            <div class="row mt-3">
+              <span class="badge badge--success"><i class="fa-solid fa-circle-notch fa-spin" style="display: none"></i> LangGraph</span>
+              <span class="badge">MongoDB</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card card--pad">
+            <div class="row row--between" style="margin-bottom: 12px">
+              <h2 class="h2 mt-0">Usage trend</h2>
+            </div>
+            <div class="chart-wrap" style="height: 200px">
+              <canvas id="dashChart" aria-label="Usage chart"></canvas>
+            </div>
+          </div>
+          <div class="card card--pad">
+            <h2 class="h2 mt-0">Recent chats</h2>
+            <div id="recent" class="mt-3"></div>
+          </div>
+        </div>
+
+        <div class="card card--pad mt-4">
+          <div class="row row--between" style="margin-bottom: 16px">
+            <h2 class="h2 mt-0">Your agents</h2>
+            <a class="btn btn--outline btn--sm" href="/agents">Manage all</a>
+          </div>
+          <div id="agents" class="agent-grid">
+            <div class="skeleton" style="height: 140px; border-radius: 16px"></div>
+            <div class="skeleton" style="height: 140px; border-radius: 16px"></div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+    <script src="/static/js/core.js"></script>
+    <script src="/static/js/ui.js"></script>
+    <script>
+      (function () {
+        AAP.requireAuth();
+        document.getElementById("logout").addEventListener("click", function () {
+          AAP.logout();
+        });
+
+        var allAgents = [];
+
+        function esc(s) {
+          return String(s || "").replace(/</g, "&lt;");
+        }
+
+        function renderAgents(list) {
+          var host = document.getElementById("agents");
+          host.innerHTML = "";
+          if (!list.length) {
+            host.innerHTML =
+              '<div class="empty-state" style="grid-column: 1 / -1">' +
+              '<div class="empty-state__icon"><i class="fa-solid fa-robot"></i></div>' +
+              '<h3 class="h3">No agents yet</h3>' +
+              '<p class="text-secondary text-sm">Create your first agent to unlock API keys, RAG, and chat.</p>' +
+              '<div class="row" style="justify-content: center; margin-top: 16px">' +
+              '<a class="btn btn--primary btn--ripple" href="/create-agent"><i class="fa-solid fa-plus"></i> Create agent</a>' +
+              "</div></div>";
+            return;
+          }
+          list.forEach(function (a) {
+            var card = document.createElement("article");
+            card.className = "agent-card js-agent-card";
+            card.setAttribute("data-name", (a.name + " " + a.model_name).toLowerCase());
+            card.innerHTML =
+              '<h3 class="h3">' +
+              esc(a.name) +
+              "</h3>" +
+              '<p class="text-secondary text-sm mono mt-0">' +
+              esc(a.model_name) +
+              "</p>" +
+              '<div class="row mt-3">' +
+              (a.memory_enabled ? '<span class="badge badge--success">Memory</span>' : '<span class="badge badge--muted">Memory off</span>') +
+              (a.rag_enabled ? '<span class="badge badge--success">RAG</span>' : '<span class="badge badge--muted">RAG off</span>') +
+              "</div>" +
+              '<div class="row mt-3">' +
+              '<a class="btn btn--outline btn--sm" href="/chat?agent=' +
+              encodeURIComponent(a.id) +
+              '"><i class="fa-solid fa-comments"></i> Chat</a>' +
+              "</div>";
+            host.appendChild(card);
+          });
+        }
+
+        document.getElementById("dash-search").addEventListener("input", function () {
+          var q = (this.value || "").toLowerCase().trim();
+          var filtered = !q
+            ? allAgents
+            : allAgents.filter(function (a) {
+                return (a.name + " " + a.model_name).toLowerCase().indexOf(q) !== -1;
+              });
+          renderAgents(filtered);
+        });
+
+        function buildChart(totalCalls) {
+          var el = document.getElementById("dashChart");
+          if (!el || !window.Chart) return;
+          var base = Math.max(10, Math.round((totalCalls || 0) / 7));
+          var data = [1, 2, 3, 4, 5, 6, 7].map(function (i) {
+            return base * i + Math.round(Math.sin(i) * base * 0.2);
+          });
+          new Chart(el.getContext("2d"), {
+            type: "bar",
+            data: {
+              labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+              datasets: [
+                {
+                  label: "Calls",
+                  data: data,
+                  backgroundColor: "rgba(37, 99, 235, 0.35)",
+                  borderRadius: 8,
+                  borderSkipped: false,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { grid: { display: false }, ticks: { color: "#64748b", font: { size: 11 } } },
+                y: { grid: { color: "rgba(226,232,240,0.9)" }, ticks: { color: "#64748b" } },
+              },
+            },
+          });
+        }
+
+        async function boot() {
+          try {
+            var me = await AAP.api("/api/auth/me");
+            document.getElementById("who").textContent = me.email;
+          } catch (e) {
+            document.getElementById("who").textContent = "—";
+          }
+
+          var stats = await AAP.api("/api/dashboard/stats");
+          document.getElementById("stat_agents").textContent = String(stats.total_agents || 0);
+          document.getElementById("stat_usage").textContent = String(stats.api_calls_today || 0);
+          buildChart(stats.api_calls_today || 0);
+
+          var recent = document.getElementById("recent");
+          recent.innerHTML = "";
+          if (!stats.recent_chats || !stats.recent_chats.length) {
+            recent.innerHTML = '<p class="text-secondary text-sm mb-0">No messages yet. Open Chat to start a thread.</p>';
+          } else {
+            stats.recent_chats.forEach(function (c) {
+              var div = document.createElement("div");
+              div.className = "card card--pad";
+              div.style.padding = "12px 14px";
+              div.style.boxShadow = "var(--shadow-sm)";
+              div.innerHTML =
+                '<div class="text-xs text-secondary">' +
+                esc(c.created_at || "") +
+                "</div>" +
+                '<div class="mt-2"><span class="badge">' +
+                esc(c.role || "") +
+                "</span> <span class=\"text-sm\">" +
+                esc((c.content || "").slice(0, 160)) +
+                (c.content && c.content.length > 160 ? "…" : "") +
+                "</span></div>";
+              recent.appendChild(div);
+            });
+          }
+
+          allAgents = await AAP.api("/api/agents");
+          renderAgents(allAgents);
+        }
+
+        boot().catch(function (e) {
+          AAP.toast(e.message || "Failed to load dashboard", "error");
+        });
+      })();
+    </script>
+  </body>
+</html>

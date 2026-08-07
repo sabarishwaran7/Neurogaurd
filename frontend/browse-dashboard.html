@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Browse Dashboard · Agentic AI Platform</title>
+    <meta name="description" content="NeuroGuard real-time browsing activity — see every website visited, AI safety status, and threats blocked." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" />
+    <link rel="stylesheet" href="/static/css/styles.css" />
+    <style>
+      /* ── Stats strip ── */
+      .bd-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 14px;
+        margin-bottom: 24px;
+      }
+      .bd-stat {
+        padding: 22px 20px;
+        border-radius: 16px;
+        background: var(--card-bg, #fff);
+        border: 1px solid var(--border, #e2e8f0);
+        box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.06));
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+      .bd-stat:hover { transform: translateY(-2px); box-shadow: var(--shadow-md, 0 4px 12px rgba(0,0,0,0.08)); }
+      .bd-stat__icon { font-size: 1.4rem; margin-bottom: 8px; }
+      .bd-stat__label {
+        font-size: 0.68rem; text-transform: uppercase;
+        letter-spacing: 0.08em; color: var(--text-secondary, #64748b);
+        font-weight: 600; margin-bottom: 6px;
+      }
+      .bd-stat__value {
+        font-size: 2rem; font-weight: 800;
+        font-family: 'Poppins', sans-serif;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      }
+      .bd-stat--safe   .bd-stat__value { background: linear-gradient(135deg, #22c55e, #4ade80); -webkit-background-clip: text; }
+      .bd-stat--warn   .bd-stat__value { background: linear-gradient(135deg, #eab308, #facc15); -webkit-background-clip: text; }
+      .bd-stat--danger .bd-stat__value { background: linear-gradient(135deg, #ef4444, #f87171); -webkit-background-clip: text; }
+      .bd-stat--block  .bd-stat__value { background: linear-gradient(135deg, #f97316, #fb923c); -webkit-background-clip: text; }
+
+      /* ── Toolbar ── */
+      .bd-toolbar {
+        display: flex; align-items: center; gap: 12px;
+        flex-wrap: wrap; margin-bottom: 16px;
+      }
+      .bd-toolbar .site-search { flex: 1; min-width: 220px; }
+      .bd-filter-btn {
+        padding: 8px 16px; border-radius: 10px;
+        font-size: 0.78rem; font-weight: 600;
+        border: 1px solid var(--border, #e2e8f0);
+        background: var(--card-bg, #fff);
+        color: var(--text-secondary, #64748b);
+        cursor: pointer; transition: all 0.2s;
+      }
+      .bd-filter-btn.is-active,
+      .bd-filter-btn:hover {
+        background: rgba(99,102,241,0.08);
+        border-color: rgba(99,102,241,0.3);
+        color: #6366f1;
+      }
+      .bd-filter-btn--danger.is-active,
+      .bd-filter-btn--danger:hover { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.3); color: #ef4444; }
+      .bd-filter-btn--warn.is-active,
+      .bd-filter-btn--warn:hover   { background: rgba(234,179,8,0.08);  border-color: rgba(234,179,8,0.3);  color: #ca8a04; }
+      .bd-filter-btn--safe.is-active,
+      .bd-filter-btn--safe:hover   { background: rgba(34,197,94,0.08);  border-color: rgba(34,197,94,0.3);  color: #16a34a; }
+
+      /* ── Table card ── */
+      .bd-table-card {
+        background: var(--card-bg, #fff);
+        border: 1px solid var(--border, #e2e8f0);
+        border-radius: 18px; overflow: hidden;
+        box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.06));
+      }
+      .bd-table-head {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border, #e2e8f0);
+      }
+      .bd-live { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.9rem; }
+      .bd-live-dot {
+        width: 9px; height: 9px; border-radius: 50%;
+        background: #22c55e; animation: bd-pulse 2s ease infinite;
+      }
+      @keyframes bd-pulse {
+        0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
+        50%      { box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+      }
+      .bd-count {
+        font-size: 0.68rem; background: rgba(99,102,241,0.1);
+        color: #6366f1; padding: 3px 10px; border-radius: 20px; font-weight: 700;
+      }
+
+      table.bd-table { width: 100%; border-collapse: collapse; }
+      table.bd-table th {
+        font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em;
+        color: var(--text-secondary, #64748b); font-weight: 600;
+        padding: 12px 16px; text-align: left;
+        border-bottom: 1px solid var(--border, #e2e8f0);
+        background: var(--surface, rgba(248,250,252,0.6));
+      }
+      table.bd-table td {
+        padding: 14px 16px; font-size: 0.82rem;
+        border-bottom: 1px solid var(--border, #e2e8f0);
+        vertical-align: middle;
+      }
+      table.bd-table tbody tr:last-child td { border-bottom: none; }
+      table.bd-table tbody tr { transition: background 0.15s; }
+      table.bd-table tbody tr:hover { background: rgba(99,102,241,0.03); }
+
+      .bd-domain { font-weight: 600; color: var(--text, #1e293b); }
+      .bd-url {
+        font-size: 0.68rem; color: var(--text-secondary, #64748b);
+        max-width: 300px; overflow: hidden;
+        text-overflow: ellipsis; white-space: nowrap; display: block;
+      }
+
+      /* Badges */
+      .bd-badge {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 4px 12px; border-radius: 20px;
+        font-size: 0.7rem; font-weight: 700;
+      }
+      .bd-badge--safe    { background: rgba(34,197,94,0.1);  color: #16a34a; }
+      .bd-badge--suspicious { background: rgba(234,179,8,0.1); color: #ca8a04; }
+      .bd-badge--harmful { background: rgba(239,68,68,0.1);  color: #dc2626; }
+      .bd-badge--unknown { background: rgba(100,116,139,0.1); color: #64748b; }
+
+      .bd-action--allowed { color: #16a34a; font-weight: 700; font-size: 0.78rem; }
+      .bd-action--blocked { color: #dc2626; font-weight: 700; font-size: 0.78rem; display: flex; align-items: center; gap: 4px; }
+
+      .bd-time { font-size: 0.72rem; color: var(--text-secondary, #64748b); white-space: nowrap; }
+      .bd-speed { font-size: 0.72rem; color: var(--text-secondary, #64748b); font-family: 'Courier New', monospace; }
+
+      @keyframes bd-slide-in {
+        from { opacity: 0; transform: translateY(-6px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      table.bd-table tbody tr { animation: bd-slide-in 0.25s ease; }
+
+      /* Empty state */
+      .bd-empty { text-align: center; padding: 60px 20px; }
+      .bd-empty__icon { font-size: 48px; margin-bottom: 16px; opacity: 0.35; }
+      .bd-empty__title { font-size: 1rem; font-weight: 700; color: var(--text-secondary, #64748b); margin-bottom: 6px; }
+      .bd-empty__sub { font-size: 0.82rem; color: var(--text-secondary, #64748b); }
+
+      /* Error banner */
+      .bd-error {
+        padding: 12px 16px; border-radius: 12px;
+        background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2);
+        color: #dc2626; font-size: 0.82rem; margin-bottom: 16px; display: none;
+      }
+
+      /* Action buttons row */
+      .bd-actions { display: flex; gap: 10px; align-items: center; }
+      .bd-btn-refresh {
+        padding: 8px 16px; border-radius: 10px; font-size: 0.78rem; font-weight: 600;
+        background: rgba(99,102,241,0.08); color: #6366f1;
+        border: 1px solid rgba(99,102,241,0.2); cursor: pointer; transition: all 0.2s;
+        display: flex; align-items: center; gap: 6px;
+      }
+      .bd-btn-refresh:hover { background: rgba(99,102,241,0.16); }
+      .bd-btn-clear {
+        padding: 8px 16px; border-radius: 10px; font-size: 0.78rem; font-weight: 600;
+        background: rgba(239,68,68,0.07); color: #dc2626;
+        border: 1px solid rgba(239,68,68,0.2); cursor: pointer; transition: all 0.2s;
+        display: flex; align-items: center; gap: 6px;
+      }
+      .bd-btn-clear:hover { background: rgba(239,68,68,0.14); }
+
+      /* Explanation tooltip */
+      .bd-explain {
+        font-size: 0.68rem; color: var(--text-secondary, #64748b);
+        max-width: 220px; white-space: normal; line-height: 1.4;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sidebar-backdrop js-sidebar-backdrop" aria-hidden="true"></div>
+
+    <div class="app-mobile-bar">
+      <button type="button" class="btn btn--ghost btn--icon js-sidebar-open" aria-label="Open navigation">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <strong class="font-display">Browse Dashboard</strong>
+      <span style="width: 44px"></span>
+    </div>
+
+    <div class="app-shell">
+      <aside class="sidebar js-sidebar" aria-label="Sidebar">
+        <div class="sidebar__brand">
+          <span class="site-logo__mark"><i class="fa-solid fa-bolt"></i></span>
+          <div>
+            <div class="font-display" style="font-weight: 700">Agentic</div>
+            <div class="text-xs text-secondary">Console</div>
+          </div>
+          <button type="button" class="btn btn--ghost btn--icon js-sidebar-close" style="margin-left: auto" aria-label="Close menu">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <nav class="sidebar__nav">
+          <a href="/dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+          <a href="/create-agent"><i class="fa-solid fa-plus"></i> Create agent</a>
+          <a href="/chat"><i class="fa-solid fa-comments"></i> Chat</a>
+          <a href="/agents"><i class="fa-solid fa-sliders"></i> Manage agents</a>
+          <a href="/extension"><i class="fa-solid fa-puzzle-piece"></i> Download Extension</a>
+          <a class="is-active" href="/browse-dashboard"><i class="fa-solid fa-chart-bar"></i> Browse Dashboard</a>
+        </nav>
+        <div class="sidebar__footer">
+          <button class="btn btn--ghost btn--ripple" type="button" id="logout" style="width: 100%">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign out
+          </button>
+        </div>
+      </aside>
+
+      <main class="app-main">
+        <div class="page-header">
+          <div>
+            <h1 class="h1"><i class="fa-solid fa-shield-halved" style="color:#6366f1; margin-right:8px;"></i>Browse Dashboard</h1>
+            <p class="text-secondary mt-0">Every website you visited — AI safety status, blocked threats, and real-time monitoring.</p>
+          </div>
+          <div class="bd-actions">
+            <button class="bd-btn-refresh" id="bdRefresh"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+            <button class="bd-btn-clear"   id="bdClear"><i class="fa-solid fa-trash"></i> Clear</button>
+          </div>
+        </div>
+
+        <!-- Error banner -->
+        <div class="bd-error" id="bdError">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          <span id="bdErrorMsg">Could not load history.</span>
+        </div>
+
+        <!-- Stats strip -->
+        <div class="bd-stats" id="bdStats">
+          <div class="bd-stat">
+            <div class="bd-stat__icon">📊</div>
+            <div class="bd-stat__label">Total Scanned</div>
+            <div class="bd-stat__value" id="statTotal">—</div>
+          </div>
+          <div class="bd-stat bd-stat--safe">
+            <div class="bd-stat__icon">🟢</div>
+            <div class="bd-stat__label">Safe Sites</div>
+            <div class="bd-stat__value" id="statSafe">—</div>
+          </div>
+          <div class="bd-stat bd-stat--warn">
+            <div class="bd-stat__icon">🟡</div>
+            <div class="bd-stat__label">Suspicious</div>
+            <div class="bd-stat__value" id="statSuspicious">—</div>
+          </div>
+          <div class="bd-stat bd-stat--danger">
+            <div class="bd-stat__icon">🔴</div>
+            <div class="bd-stat__label">Harmful</div>
+            <div class="bd-stat__value" id="statHarmful">—</div>
+          </div>
+          <div class="bd-stat bd-stat--block">
+            <div class="bd-stat__icon">🛡️</div>
+            <div class="bd-stat__label">Threats Blocked</div>
+            <div class="bd-stat__value" id="statBlocked">—</div>
+          </div>
+          <div class="bd-stat">
+            <div class="bd-stat__icon">🌐</div>
+            <div class="bd-stat__label">Unique Domains</div>
+            <div class="bd-stat__value" id="statDomains">—</div>
+          </div>
+        </div>
+
+        <!-- Filter toolbar -->
+        <div class="bd-toolbar">
+          <div class="site-search">
+            <i class="fa-solid fa-magnifying-glass text-secondary"></i>
+            <label class="sr-only" for="bdSearch">Search sites</label>
+            <input type="search" id="bdSearch" placeholder="Search domain or URL…" />
+          </div>
+          <button class="bd-filter-btn is-active" data-filter="all">All</button>
+          <button class="bd-filter-btn bd-filter-btn--safe"   data-filter="SAFE">🟢 Safe</button>
+          <button class="bd-filter-btn bd-filter-btn--warn"   data-filter="SUSPICIOUS">🟡 Suspicious</button>
+          <button class="bd-filter-btn bd-filter-btn--danger" data-filter="HARMFUL">🔴 Harmful</button>
+          <button class="bd-filter-btn bd-filter-btn--danger" data-filter="BLOCKED">🛡️ Blocked</button>
+        </div>
+
+        <!-- Activity table -->
+        <div class="bd-table-card">
+          <div class="bd-table-head">
+            <div class="bd-live">
+              <span class="bd-live-dot"></span>
+              Live Activity
+              <span class="bd-count" id="bdCount">0 entries</span>
+            </div>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="bd-table" id="bdTable">
+              <thead>
+                <tr>
+                  <th>Domain / URL</th>
+                  <th>AI Result</th>
+                  <th>Action</th>
+                  <th>Speed</th>
+                  <th>Time</th>
+                  <th>Details</th>
+                </tr>
+              </thead>
+              <tbody id="bdBody"></tbody>
+            </table>
+          </div>
+          <div class="bd-empty" id="bdEmpty" style="display:none;">
+            <div class="bd-empty__icon">🔍</div>
+            <div class="bd-empty__title">No browsing activity yet</div>
+            <div class="bd-empty__sub">Install the NeuroGuard extension and start browsing — activity will appear here automatically.</div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="/static/js/core.js"></script>
+    <script src="/static/js/ui.js"></script>
+    <script>
+      (function () {
+        AAP.requireAuth();
+        document.getElementById('logout').addEventListener('click', function () { AAP.logout(); });
+
+        var allHistory = [];
+        var activeFilter = 'all';
+        var searchQuery  = '';
+
+        function esc(s) {
+          return String(s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function badgeHtml(status) {
+          switch ((status || '').toUpperCase()) {
+            case 'SAFE':       return '<span class="bd-badge bd-badge--safe">🟢 Safe</span>';
+            case 'SUSPICIOUS': return '<span class="bd-badge bd-badge--suspicious">🟡 Suspicious</span>';
+            case 'HARMFUL':    return '<span class="bd-badge bd-badge--harmful">🔴 Harmful</span>';
+            default:           return '<span class="bd-badge bd-badge--unknown">— Unknown</span>';
+          }
+        }
+
+        function actionHtml(action) {
+          if ((action || '').toUpperCase() === 'BLOCKED') {
+            return '<span class="bd-action--blocked">🛡️ Blocked</span>';
+          }
+          return '<span class="bd-action--allowed">✅ Allowed</span>';
+        }
+
+        function filtered() {
+          return allHistory.filter(function (e) {
+            var matchFilter = activeFilter === 'all'
+              || (activeFilter === 'BLOCKED' ? (e.action || '').toUpperCase() === 'BLOCKED'
+                                             : (e.status || '').toUpperCase() === activeFilter);
+            var matchSearch = !searchQuery
+              || (e.domain || '').toLowerCase().includes(searchQuery)
+              || (e.url    || '').toLowerCase().includes(searchQuery)
+              || (e.status || '').toLowerCase().includes(searchQuery);
+            return matchFilter && matchSearch;
+          });
+        }
+
+        function renderTable() {
+          var rows  = filtered();
+          var tbody = document.getElementById('bdBody');
+          var empty = document.getElementById('bdEmpty');
+          document.getElementById('bdCount').textContent = rows.length + (rows.length === 1 ? ' entry' : ' entries');
+
+          if (!rows.length) {
+            tbody.innerHTML = '';
+            empty.style.display = 'block';
+            return;
+          }
+          empty.style.display = 'none';
+          tbody.innerHTML = rows.map(function (e) {
+            var dur = e.durationMs ? (e.durationMs / 1000).toFixed(1) + 's' : '—';
+            var explain = e.explanation
+              ? '<span class="bd-explain" title="' + esc(e.explanation) + '">' + esc((e.explanation || '').slice(0, 60)) + (e.explanation.length > 60 ? '…' : '') + '</span>'
+              : '<span class="bd-explain" style="opacity:.4;">—</span>';
+            return '<tr>' +
+              '<td><span class="bd-domain">' + esc(e.domain) + '</span>' +
+                   '<span class="bd-url" title="' + esc(e.url) + '">' + esc(e.url) + '</span></td>' +
+              '<td>' + badgeHtml(e.status) + '</td>' +
+              '<td>' + actionHtml(e.action) + '</td>' +
+              '<td><span class="bd-speed">' + esc(dur) + '</span></td>' +
+              '<td><span class="bd-time">' + esc(e.time) + '</span></td>' +
+              '<td>' + explain + '</td>' +
+            '</tr>';
+          }).join('');
+        }
+
+        function updateStats(stats) {
+          document.getElementById('statTotal').textContent     = stats.total_scanned   || 0;
+          document.getElementById('statSafe').textContent      = stats.safe            || 0;
+          document.getElementById('statSuspicious').textContent= stats.suspicious      || 0;
+          document.getElementById('statHarmful').textContent   = stats.harmful         || 0;
+          document.getElementById('statBlocked').textContent   = stats.blocked         || 0;
+          document.getElementById('statDomains').textContent   = stats.unique_domains  || 0;
+        }
+
+        function showError(msg) {
+          var el = document.getElementById('bdError');
+          document.getElementById('bdErrorMsg').textContent = msg || 'Failed to load data.';
+          el.style.display = 'block';
+        }
+
+        async function loadAll() {
+          document.getElementById('bdError').style.display = 'none';
+          try {
+            var histRes  = await AAP.api('/api/neuroguard/history');
+            var statsRes = await AAP.api('/api/neuroguard/stats');
+            allHistory = histRes.history || [];
+            updateStats(statsRes);
+            renderTable();
+          } catch (err) {
+            showError(err.message || 'Could not connect to NeuroGuard API. Is the backend running?');
+            // Fall back to zero stats
+            updateStats({});
+            renderTable();
+          }
+        }
+
+        // Filter buttons
+        document.querySelectorAll('.bd-filter-btn').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            document.querySelectorAll('.bd-filter-btn').forEach(function (b) { b.classList.remove('is-active'); });
+            btn.classList.add('is-active');
+            activeFilter = btn.dataset.filter;
+            renderTable();
+          });
+        });
+
+        // Search
+        document.getElementById('bdSearch').addEventListener('input', function () {
+          searchQuery = this.value.toLowerCase().trim();
+          renderTable();
+        });
+
+        // Refresh
+        document.getElementById('bdRefresh').addEventListener('click', loadAll);
+
+        // Clear
+        document.getElementById('bdClear').addEventListener('click', async function () {
+          if (!confirm('Clear all NeuroGuard browsing history?')) return;
+          try {
+            await AAP.api('/api/neuroguard/history', { method: 'DELETE' });
+            allHistory = [];
+            updateStats({});
+            renderTable();
+            AAP.toast && AAP.toast('History cleared.', 'success');
+          } catch (err) {
+            showError('Could not clear history: ' + (err.message || ''));
+          }
+        });
+
+        // Auto-refresh every 30 s
+        setInterval(loadAll, 30000);
+
+        loadAll();
+      })();
+    </script>
+  </body>
+</html>
